@@ -223,7 +223,6 @@ function register_user($first_name, $last_name, $username, $email, $password){
         $sql = "INSERT INTO `users` (`first_name`, `last_name`, `username`, `email`, `password`, `validation_code`, `active`)";
         $sql .= " VALUES ('$first_name', '$last_name', '$username', '$email', '$password', '$validation', 0);";
         $result = query($sql);
-        confirm($result);
 
         $subject = "Activate Account";
         $msg = "    Please click the link below to activate your account
@@ -263,7 +262,6 @@ function activate_user(){
 
             $sql = "SELECT id from users WHERE email = '".escape($_GET['email'])."'AND validation_code = '".escape($_GET['code'])."'";
             $result = query($sql);
-            confirm($result);
 
             if(row_count($result)== 1){
 
@@ -293,13 +291,12 @@ function activate_user(){
 function validate_user_login(){
 
     $errors = [];
-    $min = 3;
-    $max = 20;
     
     if($_SERVER['REQUEST_METHOD'] == "POST"){
 
         $email = clean($_POST['email']);
         $password = clean($_POST['password']);
+        $remember = isset($_POST['remember']);
 
 
 
@@ -325,7 +322,7 @@ function validate_user_login(){
             }
         }else{
 
-           if(login_user($email, $password)){
+           if(login_user($email, $password, $remember)){
 
             redirect("admin.php");
            }else{
@@ -349,7 +346,7 @@ function validate_user_login(){
 
 /** ----------------------  = Start login function = ---------------------- */
 
-function login_user($email, $password){
+function login_user($email, $password, $remember){
 
     $sql = "SELECT password,id FROM users WHERE email = '".escape($email)."' AND active = 1";
     $result = query($sql);
@@ -360,6 +357,12 @@ function login_user($email, $password){
         $db_password = $row['password'];
 
         if(md5($password) == $db_password ){
+
+            if($remember == "on"){
+
+                setcookie('email', $email, time()+86400);
+            }
+
 
             $_SESSION['email'] = $email;
 
@@ -387,7 +390,7 @@ function login_user($email, $password){
 
 
 function logged_in(){
-    if(isset($_SESSION['email'])){
+    if(isset($_SESSION['email']) || isset($_COOKIE['email'])){
 
         
         return true;
@@ -399,3 +402,128 @@ function logged_in(){
 
 
 /** ----------------------  = End logged session function = ---------------------- */
+
+
+
+
+
+
+/** ----------------------  = Start Password Recovery function = ---------------------- */
+
+
+
+function recover_password(){
+
+    if($_SERVER['REQUEST_METHOD'] == "POST"){
+
+
+        if(isset($_SESSION['token']) && $_POST['token'] === $_SESSION['token']){
+
+            $email = escape($_POST['email']);
+
+            if(email_exists($email)){
+
+                $validation_code = md5($email);
+                setcookie('temp_access_code', $validation_code, time()+60);
+
+
+
+                $sql = "UPDATE users SET validation_code ='".escape($validation_code)."' WHERE email = '".escape($email)."'";
+                $result = query($sql);
+               
+
+
+                $subject = "Please reset your password";
+                $message = "Here is your account reset code 
+                {$validation_code}
+                Click here to reset your password http://localhost/code.php?email=$email&code$validation_code
+                ";
+                $headers = "From: noreply@greentech.com";
+                
+
+                if(!send_email($email, $subject, $message, $headers)){
+
+                    echo validation_errors("could not send the provided email!");
+
+                }
+
+                set_message("<p class='bg-success text-center'>Check your inbox or in spam folder for reset code!</p>");
+                redirect("index.php");
+
+
+
+            }
+           
+        }else{
+            redirect("index.php");
+        }
+
+
+       
+    }
+}
+
+
+
+/** ----------------------  = End Password Recovery function = ---------------------- */
+
+
+
+/** ----------------------  = Start Reset Code Validation function = ---------------------- */
+
+
+
+function validation_code(){
+
+
+    if(isset($_COOKIE['temp_access_code'])){
+
+      
+
+            if(!isset($_GET['email']) && !isset($_GET['code'])){
+
+
+                    redirect("index.php");
+
+
+            }else if(empty($_GET['email']) || empty($_GET['code'])){
+
+                    redirect("index.php");
+
+            }else{
+
+                    if(isset($_POST['code'])){
+                        $email = clean($_GET['email']);
+                        $validation_code = clean($_POST['code']);
+                        $sql = "SELECT id FROM users WHERE validation_code = '".escape($validation_code)."' AND email = '".escape($email)."'";
+
+                        $result = query($sql);
+                       
+                        if(row_count($result) == 1){
+
+                            redirect("reset.php");
+
+                        }else{
+
+                            echo validation_errors("Wrong credentials!");
+                            
+                        }
+
+
+
+                    }
+
+            }
+
+
+
+    }else{
+        set_message("<p class='bg-danger text-center'>Sorry failed to perform!</p>");
+        redirect("recover.php");
+    }
+
+
+}
+
+
+/** ----------------------  = End Reset Code Validation function = ---------------------- */
