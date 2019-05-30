@@ -1,4 +1,4 @@
-# EtodoAPI
+# GreentechInnovators
   EtodoAPI is for backend api implementation and backend point will be presented below. As it is already deployed to Heroku, u can use to test your React, Vue and Angular app by making api request. Though i build to test for my own purpose u can use it free on your own. Here is a github example demo for [herokudeploy](https://expresstodoapi.herokuapp.com/api/todos/)
 
 
