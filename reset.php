@@ -7,6 +7,9 @@
 
 	<div class="row">
 
+	<?php display_message(); ?>
+	<?php password_reset(); ?>
+
 	</div>
     	<div class="row">
 			<div class="col-md-6 col-md-offset-3">
@@ -38,6 +41,7 @@
 											</div>
 										</div>
 									</div>
+									<input type="hidden" class="hide" name="token" id="token" value="<?php echo token_generator(); ?>">
 								</form>
 							</div>
 						</div>

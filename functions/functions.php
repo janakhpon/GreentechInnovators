@@ -3,43 +3,49 @@
 
 /** ----------------------  = Helper functions = ---------------------- */
 
-function clean($string){
+function clean($string)
+{
     return htmlentities($string);
 }
 
 
-function redirect($location){
+function redirect($location)
+{
     return header("Location: {$location}");
 }
 
 
-function set_message($message){
-    if(!empty($message)){
+function set_message($message)
+{
+    if (!empty($message)) {
         $_SESSION['message'] = $message;
-    }else{
+    } else {
         $message = "";
     }
 }
 
 
-function display_message(){
-    if(isset($_SESSION['message'])){
+function display_message()
+{
+    if (isset($_SESSION['message'])) {
         echo $_SESSION['message'];
         unset($_SESSION['message']);
     }
 }
 
 
-function token_generator(){
+function token_generator()
+{
     $token = $_SESSION['token'] = md5(uniqid(mt_rand(), true));
     return $token;
 }
 
 
 
-function validation_errors($error_message){
+function validation_errors($error_message)
+{
 
-$error_message=<<<DELIMITER
+    $error_message = <<<DELIMITER
 
                 <div class="alert alert-danger" role="alert">
                 $error_message
@@ -47,50 +53,49 @@ $error_message=<<<DELIMITER
 
 DELIMITER;
 
-return $error_message;
+    return $error_message;
 }
 
 
 
 
-function email_exists($email){
+function email_exists($email)
+{
 
     $sql = "SELECT id from users WHERE email = '$email'";
     $result = query($sql);
-    if(row_count($result) == 1){
+    if (row_count($result) == 1) {
 
         return true;
-    }else{
+    } else {
 
         return false;
-
     }
 }
 
 
 
-function username_exists($username){
+function username_exists($username)
+{
 
     $sql = "SELECT id from users WHERE username = '$username'";
     $result = query($sql);
-    if(row_count($result) == 1){
+    if (row_count($result) == 1) {
 
         return true;
-    }else{
+    } else {
 
         return false;
-
     }
 }
 
 
 
 
-function send_email($email,$subject,$msg, $headers){
+function send_email($email, $subject, $msg, $headers)
+{
 
-    if(mail($email,$subject,$msg,$headers)){
-
-    }
+    if (mail($email, $subject, $msg, $headers)) { }
 }
 
 
@@ -99,13 +104,14 @@ function send_email($email,$subject,$msg, $headers){
 
 /** ----------------------  = Validation functions = ---------------------- */
 
-function validate_user_registration(){
+function validate_user_registration()
+{
 
     $errors = [];
     $min = 3;
     $max = 20;
-    
-    if($_SERVER['REQUEST_METHOD'] == "POST"){
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 
         $first_name = clean($_POST['first_name']);
@@ -116,76 +122,70 @@ function validate_user_registration(){
         $confirm_password = clean($_POST['confirm_password']);
 
 
-        if(strlen($first_name)< $min){
+        if (strlen($first_name) < $min) {
             $errors[] = "First name should not be less than {$min} characters";
         }
 
-        if(strlen($last_name)< $min){
+        if (strlen($last_name) < $min) {
             $errors[] = "Last name should not be less than {$min} characters";
         }
 
 
-        if(strlen($username)< $min){
+        if (strlen($username) < $min) {
             $errors[] = "username should not be less than {$min} characters";
         }
 
-        if(username_exists($username)){
+        if (username_exists($username)) {
             $errors[] = "username already exists!";
         }
 
 
-        if(strlen($first_name)> $max){
+        if (strlen($first_name) > $max) {
             $errors[] = "First name should not be more than {$max} characters";
         }
 
-        if(strlen($last_name)> $max){
+        if (strlen($last_name) > $max) {
             $errors[] = "Last name should not be more than {$max} characters";
         }
 
-        if(strlen($username)> $max){
+        if (strlen($username) > $max) {
             $errors[] = "username should not be more than {$max} characters";
         }
 
-        if(strlen($email)> $max){
+        if (strlen($email) > $max) {
             $errors[] = "Email should not be more than {$max} characters";
         }
 
 
-        if(email_exists($email)){
+        if (email_exists($email)) {
             $errors[] = "Email already exists!";
         }
 
-        if($password !== $confirm_password){
+        if ($password !== $confirm_password) {
             $errors[] = "Password fields do not match!";
         }
-        
 
 
 
 
-        if(!empty($errors)){
 
-            foreach($errors as $error){
+        if (!empty($errors)) {
+
+            foreach ($errors as $error) {
 
                 echo validation_errors($error);
-
-
             }
-        }else{
-            if(register_user($first_name, $last_name, $username, $email, $password)){
-              
+        } else {
+            if (register_user($first_name, $last_name, $username, $email, $password)) {
+
                 set_message("<div class='alert alert-success' role='alert'>Check your email or in spam folder for activation link</div>");
                 redirect("index.php");
-            }else{
-                             
+            } else {
+
                 set_message("<div class='alert alert-danger' role='alert'>Failed to register! Try again</div>");
-                redirect("index.php"); 
+                redirect("index.php");
             }
-
         }
-
-
-
     }
 }
 
@@ -200,7 +200,8 @@ function validate_user_registration(){
 
 
 
-function register_user($first_name, $last_name, $username, $email, $password){
+function register_user($first_name, $last_name, $username, $email, $password)
+{
 
     $first_name = escape($first_name);
     $last_name = escape($last_name);
@@ -209,13 +210,13 @@ function register_user($first_name, $last_name, $username, $email, $password){
     $password = escape($password);
 
 
-    if(email_exists($email)){
+    if (email_exists($email)) {
 
         return false;
-    }else if(username_exists($username)){
-        
+    } else if (username_exists($username)) {
+
         return false;
-    }else{
+    } else {
 
         $password = md5($password);
         $validation = md5($username);
@@ -230,11 +231,9 @@ function register_user($first_name, $last_name, $username, $email, $password){
         ";
         $headers = "From: greentechinnovator@group.com";
 
-        send_email($email,$subject,$msg,$headers);
+        send_email($email, $subject, $msg, $headers);
         return true;
     }
-
-
 }
 
 
@@ -253,29 +252,29 @@ function register_user($first_name, $last_name, $username, $email, $password){
 /** ----------------------  = Start Activation functions = ---------------------- */
 
 
-function activate_user(){
-    if($_SERVER['REQUEST_METHOD'] == 'GET'){
-        if(isset($_GET['email'])){
+function activate_user()
+{
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        if (isset($_GET['email'])) {
             $email = clean($_GET['email']);
             $validation = clean($_GET['code']);
 
 
-            $sql = "SELECT id from users WHERE email = '".escape($_GET['email'])."'AND validation_code = '".escape($_GET['code'])."'";
+            $sql = "SELECT id from users WHERE email = '" . escape($_GET['email']) . "'AND validation_code = '" . escape($_GET['code']) . "'";
             $result = query($sql);
 
-            if(row_count($result)== 1){
+            if (row_count($result) == 1) {
 
-                $sql1 = "UPDATE users SET active = 1, validation_code = 0 WHERE email = '".escape($email)."' AND validation_code = '".escape($validation)."'";
+                $sql1 = "UPDATE users SET active = 1, validation_code = 0 WHERE email = '" . escape($email) . "' AND validation_code = '" . escape($validation) . "'";
                 $result1 = query($sql1);
                 confirm($result1);
-                
+
                 set_message("<p class='bg-success   '>Your fucking acc is activated!</p>");
                 redirect("login.php");
-            }else{
-               
+            } else {
+
                 echo "<p class='bg-danger'>Your fucking acc is not activated!</p>";
             }
-
         }
     }
 }
@@ -288,11 +287,12 @@ function activate_user(){
 
 
 
-function validate_user_login(){
+function validate_user_login()
+{
 
     $errors = [];
-    
-    if($_SERVER['REQUEST_METHOD'] == "POST"){
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         $email = clean($_POST['email']);
         $password = clean($_POST['password']);
@@ -300,42 +300,34 @@ function validate_user_login(){
 
 
 
-        if(empty($email)){
+        if (empty($email)) {
             $errors[] = "Email can't be blanked!";
-
         }
 
-        if(empty($password)){
+        if (empty($password)) {
             $errors[] = "Password can't be emptied";
-
         }
 
 
 
-        if(!empty($errors)){
+        if (!empty($errors)) {
 
-            foreach($errors as $error){
+            foreach ($errors as $error) {
 
                 echo validation_errors($error);
-
-
             }
-        }else{
+        } else {
 
-           if(login_user($email, $password, $remember)){
+            if (login_user($email, $password, $remember)) {
 
-            redirect("admin.php");
-           }else{
+                redirect("admin.php");
+            } else {
 
 
-            echo validation_errors("You got fucking wrong creditionals");
-           }
-
+                echo validation_errors("You got fucking wrong creditionals");
+            }
         }
-
-
     }
-
 }
 
 
@@ -346,40 +338,38 @@ function validate_user_login(){
 
 /** ----------------------  = Start login function = ---------------------- */
 
-function login_user($email, $password, $remember){
+function login_user($email, $password, $remember)
+{
 
-    $sql = "SELECT password,id FROM users WHERE email = '".escape($email)."' AND active = 1";
+    $sql = "SELECT password,id FROM users WHERE email = '" . escape($email) . "' AND active = 1";
     $result = query($sql);
 
-    if(row_count($result) == 1){
+    if (row_count($result) == 1) {
 
         $row = fetch_array($result);
         $db_password = $row['password'];
 
-        if(md5($password) == $db_password ){
+        if (md5($password) == $db_password) {
 
-            if($remember == "on"){
+            if ($remember == "on") {
 
-                setcookie('email', $email, time()+86400);
+                setcookie('email', $email, time() + 86400);
             }
 
 
             $_SESSION['email'] = $email;
 
             return true;
-        }else{
+        } else {
 
             return false;
         }
 
         return true;
-
-    }else{
+    } else {
 
         return false;
-
     }
-
 }
 
 /** ----------------------  = End login function = ---------------------- */
@@ -389,13 +379,13 @@ function login_user($email, $password, $remember){
 /** ----------------------  = Start logged session function = ---------------------- */
 
 
-function logged_in(){
-    if(isset($_SESSION['email']) || isset($_COOKIE['email'])){
+function logged_in()
+{
+    if (isset($_SESSION['email']) || isset($_COOKIE['email'])) {
 
-        
+
         return true;
-
-    }else{
+    } else {
         return false;
     }
 }
@@ -412,25 +402,26 @@ function logged_in(){
 
 
 
-function recover_password(){
+function recover_password()
+{
 
-    if($_SERVER['REQUEST_METHOD'] == "POST"){
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 
-        if(isset($_SESSION['token']) && $_POST['token'] === $_SESSION['token']){
+        if (isset($_SESSION['token']) && $_POST['token'] === $_SESSION['token']) {
 
             $email = escape($_POST['email']);
 
-            if(email_exists($email)){
+            if (email_exists($email)) {
 
                 $validation_code = md5($email);
-                setcookie('temp_access_code', $validation_code, time()+60);
+                setcookie('temp_access_code', $validation_code, time() + 300);
 
 
 
-                $sql = "UPDATE users SET validation_code ='".escape($validation_code)."' WHERE email = '".escape($email)."'";
+                $sql = "UPDATE users SET validation_code ='" . escape($validation_code) . "' WHERE email = '" . escape($email) . "'";
                 $result = query($sql);
-               
+
 
 
                 $subject = "Please reset your password";
@@ -439,27 +430,29 @@ function recover_password(){
                 Click here to reset your password http://localhost/code.php?email=$email&code$validation_code
                 ";
                 $headers = "From: noreply@greentech.com";
-                
 
-                if(!send_email($email, $subject, $message, $headers)){
+
+                if (!send_email($email, $subject, $message, $headers)) {
 
                     echo validation_errors("could not send the provided email!");
-
                 }
 
                 set_message("<p class='bg-success text-center'>Check your inbox or in spam folder for reset code!</p>");
                 redirect("index.php");
-
-
-
             }
-           
-        }else{
+        } else {
             redirect("index.php");
         }
 
 
-       
+        if(isset($_POST['cancel_submit'])){
+
+
+            redirect("login.php");
+
+        }
+
+
     }
 }
 
@@ -473,57 +466,106 @@ function recover_password(){
 
 
 
-function validation_code(){
+function validation_code()
+{
 
 
-    if(isset($_COOKIE['temp_access_code'])){
-
-      
-
-            if(!isset($_GET['email']) && !isset($_GET['code'])){
-
-
-                    redirect("index.php");
-
-
-            }else if(empty($_GET['email']) || empty($_GET['code'])){
-
-                    redirect("index.php");
-
-            }else{
-
-                    if(isset($_POST['code'])){
-                        $email = clean($_GET['email']);
-                        $validation_code = clean($_POST['code']);
-                        $sql = "SELECT id FROM users WHERE validation_code = '".escape($validation_code)."' AND email = '".escape($email)."'";
-
-                        $result = query($sql);
-                       
-                        if(row_count($result) == 1){
-
-                            redirect("reset.php");
-
-                        }else{
-
-                            echo validation_errors("Wrong credentials!");
-                            
-                        }
+    if (isset($_COOKIE['temp_access_code'])) {
 
 
 
-                    }
+        if (!isset($_GET['email']) && !isset($_GET['code'])) {
 
+
+            redirect("index.php");
+        } else if (empty($_GET['email']) || empty($_GET['code'])) {
+
+            redirect("index.php");
+        } else {
+
+            if (isset($_POST['code'])) {
+                $email = clean($_GET['email']);
+                $validation_code = clean($_POST['code']);
+                $sql = "SELECT id FROM users WHERE validation_code = '" . escape($validation_code) . "' AND email = '" . escape($email) . "'";
+
+                $result = query($sql);
+
+                if (row_count($result) == 1) {
+
+                    redirect("reset.php?email=$email&code=$validation_code");
+                } else {
+
+                    echo validation_errors("Wrong credentials!");
+                }
             }
-
-
-
-    }else{
+        }
+    } else {
         set_message("<p class='bg-danger text-center'>Sorry failed to perform!</p>");
         redirect("recover.php");
     }
-
-
 }
 
 
 /** ----------------------  = End Reset Code Validation function = ---------------------- */
+
+
+
+
+
+/** ----------------------  = Start Password Reset function = ---------------------- */
+
+
+
+
+
+
+
+function password_reset()
+{
+
+
+    if (isset($_COOKIE['temp_access_code'])) {
+
+        if (isset($_GET['email']) && isset($_GET['code'])) {
+
+            if (isset($_SESSION['token']) && isset($_POST['token'])) {
+
+
+                if ($_POST['token'] === $_SESSION['token']) {
+
+
+                    if($_POST['password'] === $_POST['confirm_password']){
+
+                        $updated_password = md5($_POST['password']);
+                        $sql = "UPDATE users SET password = '".escape($updated_password)."' validation_code = 0 WHERE email = '".escape($_GET['email'])."'";
+                        query($sql);
+
+                        set_message("<p class='bg-success text-center'>Password has changed!</p>");
+                        redirect("login.php");
+
+
+                    }
+
+                   
+
+                    
+                 }
+            }
+        } else {
+
+
+            echo set_message("<div class='alert alert-danger' role='alert'>Your Code session has expired!</div>");
+
+            redirect("recover.php");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+/** ----------------------  = End Password Reset function = ---------------------- */
